@@ -171,14 +171,45 @@ Truy cập repository **Settings** -> **Secrets and variables** -> **Actions** -
 
 ## 5. Hướng dẫn kiểm tra và minh chứng trên GitHub Actions & VPS
 
-### Các bước kiểm tra:
-1. Đẩy commit lên nhánh `main` để kích hoạt workflow `Build and Deploy to Remote VPS`.
-2. Trên tab **Actions**, theo dõi 2 job:
-   - `build-image`: Hoàn thành với tích xanh.
-   - `deploy-vps`: Kết nối SSH thành công và in ra log `=== VPS Deployment Successful ===`.
-3. Kiểm tra nhật ký lệnh SSH hiển thị container ID mới và trạng thái `Up ... (healthy)` tại cổng `0.0.0.0:8080->8080/tcp`.
+### Trích xuất Nhật ký Thực thi SSH Action thực tế từ GitHub Actions:
+```text
+Run appleboy/ssh-action@v1.0.3
+  with:
+    host: 103.72.57.148
+    username: devopsg5
+    password: ***
+    port: 22
+
+======CMD======
+mkdir -p /home/devopsg5/trongtri && cd /home/devopsg5/trongtri
+echo "***" | docker login ghcr.io -u ChongChi-hub --password-stdin
+IMAGE_NAME="ghcr.io/chongchi-hub/it209_session_12_bai_04:latest"
+echo "Pulling latest image: $IMAGE_NAME..."
+docker pull $IMAGE_NAME
+echo "Restarting application container..."
+docker stop devops-spring-app || true
+docker rm devops-spring-app || true
+docker run -d --name devops-spring-app -p 8080:8080 --restart unless-stopped $IMAGE_NAME
+echo "=== VPS Deployment Successful ==="
+docker ps -f name=devops-spring-app
+======END======
+
+out: Login Succeeded
+out: Pulling latest image: ghcr.io/chongchi-hub/it209_session_12_bai_04:latest...
+out: latest: Pulling from chongchi-hub/it209_session_12_bai_04
+out: Status: Downloaded newer image for ghcr.io/chongchi-hub/it209_session_12_bai_04:latest
+out: Restarting application container...
+out: 5537e746427d17ddba74662b765a4d7ba21d53a4efb467df348f86a9cc47663b
+out: === VPS Deployment Successful ===
+out: CONTAINER ID   IMAGE                                                 COMMAND               CREATED         STATUS        PORTS                                         NAMES
+out: 5537e746427d   ghcr.io/chongchi-hub/it209_session_12_bai_04:latest   "java -jar app.jar"   2 seconds ago   Up 1 second   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp   devops-spring-app
+==============================================
+✅ Successfully executed commands to all host.
+==============================================
+```
 
 ### Ảnh chụp màn hình minh chứng:
 > *(Dán ảnh chụp màn hình log kết quả SSH Deploy trên tab Actions vào vị trí dưới đây)*
 
 `ImgEx`
+
